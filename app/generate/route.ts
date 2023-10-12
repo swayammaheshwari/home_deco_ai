@@ -3,6 +3,8 @@ import redis from "../../utils/redis";
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 
+console.log("Starting script...");
+
 // Create a new ratelimiter, that allows 5 requests per 24 hours
 const ratelimit = redis
   ? new Ratelimit({
@@ -13,14 +15,19 @@ const ratelimit = redis
   : undefined;
 
 export async function POST(request: Request) {
+  console.log("POST function called.");
+
   // Rate Limiter Code
   if (ratelimit) {
     const headersList = headers();
     const ipIdentifier = headersList.get("x-real-ip");
+    console.log("IP Identifier:", ipIdentifier);
 
     const result = await ratelimit.limit(ipIdentifier ?? "");
+    console.log("Rate Limit Result:", result);
 
     if (!result.success) {
+      console.log("Rate limit exceeded.");
       return new Response(
         "Too many uploads in 1 day. Please try again in a 24 hours.",
         {
@@ -35,6 +42,7 @@ export async function POST(request: Request) {
   }
 
   const { imageUrl, theme, room } = await request.json();
+  console.log("Received data:", imageUrl, theme, room);
 
   // POST request to Replicate to start the image restoration generation process
   let startResponse = await fetch("https://api.replicate.com/v1/predictions", {
@@ -60,15 +68,18 @@ export async function POST(request: Request) {
     }),
   });
 
+  console.log("Start response:", startResponse);
+
   let jsonStartResponse = await startResponse.json();
+  console.log("JSON Start Response:", jsonStartResponse);
 
   let endpointUrl = jsonStartResponse.urls.get;
+  console.log("Endpoint URL:", endpointUrl);
 
   // GET request to get the status of the image restoration process & return the result when it's ready
-  let restoredImage: string | null = null;
+  let restoredImage = null;
   while (!restoredImage) {
-    // Loop in 1s intervals until the alt text is ready
-    console.log("polling for result...");
+    console.log("Polling for result...");
     let finalResponse = await fetch(endpointUrl, {
       method: "GET",
       headers: {
@@ -76,7 +87,10 @@ export async function POST(request: Request) {
         Authorization: "Token " + process.env.REPLICATE_API_KEY,
       },
     });
+    console.log("Final Response:", finalResponse);
+
     let jsonFinalResponse = await finalResponse.json();
+    console.log("JSON Final Response:", jsonFinalResponse);
 
     if (jsonFinalResponse.status === "succeeded") {
       restoredImage = jsonFinalResponse.output;
@@ -87,7 +101,11 @@ export async function POST(request: Request) {
     }
   }
 
+  console.log("Restored Image:", restoredImage);
+
   return NextResponse.json(
     restoredImage ? restoredImage : "Failed to restore image"
   );
 }
+
+console.log("Script completed.");

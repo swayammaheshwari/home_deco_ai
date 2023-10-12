@@ -83,6 +83,7 @@ export default function DreamPage() {
     });
 
     let newPhoto = await res.json();
+    console.log(newPhoto)
     if (res.status !== 200) {
       setError(newPhoto);
     } else {
@@ -165,9 +166,8 @@ export default function DreamPage() {
                 </div>
               )}
               <div
-                className={`${
-                  restoredLoaded ? "visible mt-6 -ml-8" : "invisible"
-                }`}
+                className={`${restoredLoaded ? "visible mt-6 -ml-8" : "invisible"
+                  }`}
               >
                 <Toggle
                   className={`${restoredLoaded ? "visible mb-6" : "invisible"}`}

@@ -3,9 +3,9 @@ import { Metadata } from "next";
 import "../styles/globals.css";
 
 let title = "Dream Room Generator";
-let description = "Generate your dream room in seconds.";
-let ogimage = "https://roomgpt-demo.vercel.app/og-image.png";
-let sitename = "roomGPT.io";
+let description = "Generate the world of compatible";
+let ogimage = "";
+let sitename = "burnoRoom AI";
 
 export const metadata: Metadata = {
   title,
